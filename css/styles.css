@@ -23,6 +23,15 @@
   --status-serious: #ec835a;
   --status-critical: #d03b3b;
 
+  --cat-1: #2a78d6; /* blue */
+  --cat-2: #eb6834; /* orange */
+  --cat-3: #1baf7a; /* aqua */
+  --cat-4: #eda100; /* yellow */
+  --cat-5: #e87ba4; /* magenta */
+  --cat-6: #008300; /* green */
+  --cat-7: #4a3aa7; /* violet */
+  --cat-8: #e34948; /* red */
+
   --radius: 10px;
   --font: system-ui, -apple-system, "Segoe UI", sans-serif;
 }
@@ -45,6 +54,15 @@
     --series-network: #199e70;
     --series-requests: #c98500;
     --series-users: #9085e9;
+
+    --cat-1: #3987e5;
+    --cat-2: #d95926;
+    --cat-3: #199e70;
+    --cat-4: #c98500;
+    --cat-5: #d55181;
+    --cat-6: #008300;
+    --cat-7: #9085e9;
+    --cat-8: #e66767;
   }
 }
 :root[data-theme="dark"] {
@@ -64,6 +82,15 @@
   --series-network: #199e70;
   --series-requests: #c98500;
   --series-users: #9085e9;
+
+  --cat-1: #3987e5;
+  --cat-2: #d95926;
+  --cat-3: #199e70;
+  --cat-4: #c98500;
+  --cat-5: #d55181;
+  --cat-6: #008300;
+  --cat-7: #9085e9;
+  --cat-8: #e66767;
 }
 
 * { box-sizing: border-box; }

@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SQD OKR Dashboard</title>
+<meta name="description" content="Monthly progress of SQD Objectives and Key Results for 2026." />
+<link rel="stylesheet" href="css/styles.css" />
+<link rel="stylesheet" href="css/okr.css" />
+</head>
+<body>
+<div class="app">
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-dot" aria-hidden="true"></span>
+      <h1>SQD OKR Dashboard</h1>
+    </div>
+    <div class="topbar-right">
+      <a class="btn" href="index.html">Live Metrics ↗</a>
+      <button id="theme-toggle" class="icon-btn" type="button" aria-label="Toggle dark mode" title="Toggle dark mode">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z" fill="currentColor"/></svg>
+      </button>
+    </div>
+  </header>
+  <p class="subtitle" id="page-subtitle">Monthly progress of Objectives &amp; Key Results, 2026.</p>
+
+  <nav class="tabs" id="tabs" aria-label="OKR sections">
+    <button class="tab-btn active" data-tab="overview" type="button">Overview</button>
+    <button class="tab-btn" data-tab="complaints" type="button">Supplier Complaints</button>
+    <button class="tab-btn" data-tab="audits" type="button">Audit Status</button>
+    <button class="tab-btn" data-tab="apqp" type="button">APQP Status</button>
+    <button class="tab-btn" data-tab="safelaunch" type="button">Safe Launch</button>
+    <button class="tab-btn" data-tab="eos" type="button">EOS</button>
+    <button class="tab-btn" data-tab="ai" type="button">AI Assistant</button>
+  </nav>
+
+  <!-- OVERVIEW -->
+  <section class="tab-panel active" id="panel-overview">
+    <div class="panel chart-panel">
+      <div class="panel-head">
+        <h2>Overall Weighted Score — Jan to Aug 2026</h2>
+        <ul class="legend" id="legend-overall"></ul>
+      </div>
+      <canvas class="kr-chart" id="chart-overall"></canvas>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2>Objective Weights</h2></div>
+      <div class="obj-list" id="obj-weight-list"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h2>Objective Snapshot (YTD score)</h2></div>
+      <div class="obj-cards" id="obj-cards"></div>
+    </div>
+  </section>
+
+  <!-- 1. SUPPLIER QUALITY COMPLAINTS -->
+  <section class="tab-panel" id="panel-complaints">
+    <div class="panel">
+      <div class="kr-block">
+        <div class="kr-block-head">
+          <h3 id="kr2-title">KR2 — Supplier incident count (DMN)</h3>
+          <div class="kr-target" id="kr2-target"></div>
+        </div>
+        <canvas class="kr-chart" id="chart-kr2"></canvas>
+        <div class="chip-row" id="kr2-ytd"></div>
+      </div>
+      <div class="kr-block">
+        <div class="kr-block-head">
+          <h3 id="kr5-title">KR5 — Mass appearance / batch quality issues</h3>
+          <div class="kr-target" id="kr5-target"></div>
+        </div>
+        <table class="notes-table" id="kr5-notes"><thead><tr><th>Month</th><th>Score</th><th>Note</th></tr></thead><tbody></tbody></table>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. AUDIT STATUS -->
+  <section class="tab-panel" id="panel-audits">
+    <div class="panel">
+      <div class="kr-block-head">
+        <h3 id="audit-title">KR3 — Audit completion by type</h3>
+        <div class="kr-target" id="audit-target"></div>
+      </div>
+      <div class="panel-head" style="margin-top:6px;">
+        <span></span>
+        <ul class="legend" id="legend-audits"></ul>
+      </div>
+      <canvas class="kr-chart" id="chart-audits"></canvas>
+      <div class="stat-grid" id="audit-ytd" style="margin-top:14px;"></div>
+      <table class="notes-table" id="audit-notes"><thead><tr><th>Month</th><th>Score</th><th>Note</th></tr></thead><tbody></tbody></table>
+    </div>
+  </section>
+
+  <!-- 3. APQP STATUS -->
+  <section class="tab-panel" id="panel-apqp">
+    <p class="source-note">These counts are cross-referenced from several Key Results (KR7 New Sourcing/Run@Rate, KR8 OTS/PPAP delivery, KR9 PPAP FTQ approval, KR11 MQS) since the source OKR sheet tracks activity totals per month rather than a per-project table.</p>
+    <div class="panel">
+      <div class="kr-block">
+        <div class="kr-block-head"><h3 id="kr7-title">Kick-off &amp; Run @ Rate — KR7</h3><div class="kr-target" id="kr7-target"></div></div>
+        <canvas class="kr-chart" id="chart-kr7"></canvas>
+        <ul class="legend" id="legend-kr7"></ul>
+      </div>
+      <div class="kr-block">
+        <div class="kr-block-head"><h3 id="kr8-title">PPAP &amp; OTS delivery — KR8</h3><div class="kr-target" id="kr8-target"></div></div>
+        <canvas class="kr-chart" id="chart-kr8"></canvas>
+        <ul class="legend" id="legend-kr8"></ul>
+      </div>
+      <div class="kr-block">
+        <div class="kr-block-head"><h3 id="kr9-title">PPAP first-time approval (FTQ) — KR9</h3><div class="kr-target" id="kr9-target"></div></div>
+        <canvas class="kr-chart" id="chart-kr9"></canvas>
+      </div>
+      <div class="kr-block">
+        <div class="kr-block-head"><h3>SOP (Start of Production)</h3></div>
+        <p class="source-note" style="margin-bottom:0;" id="sop-note"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. SAFE LAUNCH -->
+  <section class="tab-panel" id="panel-safelaunch">
+    <div class="panel">
+      <div class="kr-block-head">
+        <h3 id="kr10-title">KR10 — Run @ Rate &amp; Safe Launch outcome</h3>
+        <div class="kr-target" id="kr10-target"></div>
+      </div>
+      <div class="panel-head" style="margin-top:6px;">
+        <span></span>
+        <ul class="legend" id="legend-safelaunch"></ul>
+      </div>
+      <canvas class="kr-chart" id="chart-safelaunch"></canvas>
+      <div class="stat-grid" id="safelaunch-ytd" style="margin-top:14px;"></div>
+      <table class="notes-table" id="safelaunch-notes"><thead><tr><th>Month</th><th>Score</th><th>Note</th></tr></thead><tbody></tbody></table>
+    </div>
+  </section>
+
+  <!-- 5. EOS -->
+  <section class="tab-panel" id="panel-eos">
+    <div class="panel">
+      <div class="kr-block-head">
+        <h3 id="eos-title">KR13 — MPJ EOS average score</h3>
+        <div class="kr-target" id="eos-target"></div>
+      </div>
+      <div class="hero-stat"><span class="hero-value" id="eos-hero">—</span><span class="hero-unit">latest score</span></div>
+      <canvas class="kr-chart" id="chart-eos"></canvas>
+    </div>
+  </section>
+
+  <!-- 6. AI ASSISTANT -->
+  <section class="tab-panel" id="panel-ai">
+    <div class="panel">
+      <div class="kr-block-head">
+        <h3 id="ai-title">KR14 — AI Assistant work</h3>
+        <div class="kr-target" id="ai-target"></div>
+      </div>
+      <canvas class="kr-chart" id="chart-ai"></canvas>
+      <p class="source-note" id="ai-note" style="margin-top:12px;"></p>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <p>Source: uploaded OKR tracker. Regenerate <code>data/okr-data.json</code> from an updated workbook with <code>python3 scripts/parse_okr.py path/to/OKR.xlsx</code>.</p>
+  </footer>
+
+</div>
+<script src="js/charts.js"></script>
+<script src="js/okr.js"></script>
+</body>
+</html>
