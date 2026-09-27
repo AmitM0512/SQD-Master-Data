@@ -1,6 +1,7 @@
 # Secrets — never commit
 config/kite_config.json
 config/.access_token.json
+config/dhan_config.json
 # Runtime data
 data/
 output/

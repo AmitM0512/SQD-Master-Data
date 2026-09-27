@@ -1,6 +1,11 @@
-# NSE ETF Strategy — Zerodha Kite Connect
+# NSE ETF Strategy — Dhan & Zerodha Kite
 
-Everything lives in one file: `etf_strategy.py`. It covers the backtest, paper trading, Kite login and the ETF universe.
+There are two standalone single-file versions with identical strategy, backtest and paper-trading logic:
+
+| Broker | File | Config |
+|---|---|---|
+| **Dhan (DhanHQ API v2)** | `etf_strategy_dhan.py` | `config/dhan_config.json` |
+| Zerodha Kite Connect | `etf_strategy.py` | `config/kite_config.json` |
 **It never places real orders.**
 
 ## Rules (the backtest and paper trading use the same rules)
@@ -15,7 +20,34 @@ Everything lives in one file: `etf_strategy.py`. It covers the backtest, paper t
 Every buy is a separate lot with its own target, so adding to an ETF after the cooldown is allowed. You can cap it with `max_lots_per_symbol`.
 When cash is short, the biggest movers are bought first. If 8% can't be funded, the signal is skipped.
 
-## Setup
+## Setup — Dhan
+```bash
+cd etf_algo
+pip install -r requirements.txt
+cp config/dhan_config.example.json config/dhan_config.json
+chmod 600 config/dhan_config.json      # then fill client_id / access_token
+```
+Generate the access token on **web.dhan.co → My Profile → Access DhanHQ APIs**, and keep the Data APIs enabled.
+Tokens expire, so paste a fresh one when `check` reports an auth error.
+You can also set `DHAN_CLIENT_ID` and `DHAN_ACCESS_TOKEN` as environment variables instead.
+
+```bash
+python etf_strategy_dhan.py check                  # verify credentials + data access
+python etf_strategy_dhan.py universe --save        # all NSE ETFs + Dhan security ids
+python etf_strategy_dhan.py backtest --start 2022-01-01 --capital 1000000
+python etf_strategy_dhan.py paper                  # paper trade today's session
+python etf_strategy_dhan.py paper --once
+python etf_strategy_dhan.py status
+```
+Data comes from these Dhan sources:
+- **Instruments:** Dhan's public scrip master (`images.dhan.co/api-data/api-scrip-master.csv`), cached daily.
+- **Daily candles:** `POST /v2/charts/historical`, cached incrementally.
+- **Live prices:** `POST /v2/marketfeed/ohlc`.
+
+The previous close comes from the daily history, which is the last completed session.
+The Dhan version writes to `output/dhan/`, `data/paper_dhan/` and `logs/etf_strategy_dhan.log`.
+
+## Setup — Zerodha Kite
 ```bash
 cd etf_algo
 pip install -r requirements.txt

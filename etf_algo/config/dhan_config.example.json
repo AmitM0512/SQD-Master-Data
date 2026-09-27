@@ -1,0 +1,51 @@
+{
+  "dhan": {
+    "client_id": "YOUR_DHAN_CLIENT_ID",
+    "access_token": "YOUR_DHAN_ACCESS_TOKEN"
+  },
+  "strategy": {
+    "entry_move_pct": 1.25,
+    "entry_direction": "down",
+    "min_avg_volume": 50000,
+    "volume_lookback_days": 20,
+    "allocation_pct": 8.0,
+    "target_pct": 5.5,
+    "cooldown_trading_days": 1,
+    "max_lots_per_symbol": null,
+    "max_new_buys_per_day": null,
+    "allow_same_day_exit": false,
+    "transaction_cost_pct": 0.1
+  },
+  "universe": {
+    "source": "auto",
+    "scrip_master_url": "https://images.dhan.co/api-data/api-scrip-master.csv",
+    "symbols_file": "config/etf_universe.csv",
+    "extra_symbols": [],
+    "exclude_symbols": [],
+    "exclude_name_keywords": [
+      "LIQUID",
+      "OVERNIGHT",
+      "MONEY MARKET",
+      "1D RATE",
+      "GILT",
+      "SDL"
+    ]
+  },
+  "backtest": {
+    "initial_capital": 1000000,
+    "start": "2022-01-01",
+    "end": null
+  },
+  "paper": {
+    "initial_capital": 1000000,
+    "poll_seconds": 60,
+    "entry_start": "09:20",
+    "entry_end": "15:25"
+  },
+  "paths": {
+    "cache_dir": "data/cache_dhan",
+    "output_dir": "output/dhan",
+    "log_dir": "logs",
+    "paper_state_file": "data/paper_dhan/paper_state.json"
+  }
+}

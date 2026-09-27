@@ -1,3 +1,4 @@
-kiteconnect>=5.0
 pandas>=1.5
-matplotlib>=3.5  # optional: equity-curve chart in backtest reports
+requests>=2.28        # Dhan version (etf_strategy_dhan.py)
+kiteconnect>=5.0      # Zerodha version (etf_strategy.py) only
+matplotlib>=3.5       # optional: equity-curve chart in backtest reports
