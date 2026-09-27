@@ -1,0 +1,8 @@
+# Secrets — never commit
+config/kite_config.json
+config/.access_token.json
+# Runtime data
+data/
+output/
+logs/
+__pycache__/

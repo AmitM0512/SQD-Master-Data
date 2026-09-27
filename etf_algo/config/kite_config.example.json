@@ -1,0 +1,45 @@
+{
+  "kite": {
+    "api_key": "YOUR_KITE_API_KEY",
+    "api_secret": "YOUR_KITE_API_SECRET",
+    "access_token": ""
+  },
+  "strategy": {
+    "entry_move_pct": 1.25,
+    "entry_direction": "down",
+    "min_avg_volume": 50000,
+    "volume_lookback_days": 20,
+    "allocation_pct": 8.0,
+    "target_pct": 5.5,
+    "cooldown_trading_days": 1,
+    "max_lots_per_symbol": null,
+    "max_new_buys_per_day": null,
+    "allow_same_day_exit": false,
+    "transaction_cost_pct": 0.1
+  },
+  "universe": {
+    "source": "auto",
+    "symbols_file": "config/etf_universe.csv",
+    "extra_symbols": [],
+    "exclude_symbols": [],
+    "exclude_name_keywords": ["LIQUID", "OVERNIGHT", "MONEY MARKET", "1D RATE", "GILT", "SDL"]
+  },
+  "backtest": {
+    "initial_capital": 1000000,
+    "start": "2022-01-01",
+    "end": null
+  },
+  "paper": {
+    "initial_capital": 1000000,
+    "poll_seconds": 60,
+    "entry_start": "09:20",
+    "entry_end": "15:25"
+  },
+  "paths": {
+    "cache_dir": "data/cache",
+    "output_dir": "output",
+    "log_dir": "logs",
+    "token_file": "config/.access_token.json",
+    "paper_state_file": "data/paper/paper_state.json"
+  }
+}
