@@ -1,71 +1,107 @@
-"""Order execution: a simulated paper broker and a real ccxt spot broker."""
+"""Order execution: a simulated paper broker and the real Dhan broker.
+
+Both are long-only and track the bot's own position in its state file, so the
+bot never sells shares it did not buy itself.
+"""
 from __future__ import annotations
 
 import logging
+import time
+
+from .data import SEGMENTS, check
 
 log = logging.getLogger("ema_bot")
 
 
 class PaperBroker:
-    """Simulated fills at the last traded price. Balances live in the bot's state file."""
+    """Simulated fills at the last traded price."""
 
     def __init__(self, state: dict, starting_cash: float, fee_pct: float):
         self.state = state
         self.fee = fee_pct / 100
         state.setdefault("paper_cash", starting_cash)
-        state.setdefault("paper_units", 0.0)
+        state.setdefault("units", 0)
 
-    def position(self) -> float:
-        return self.state["paper_units"]
+    def position(self) -> int:
+        return self.state["units"]
 
-    def buy(self, quote_amount: float, price: float) -> float:
-        spend = min(quote_amount, self.state["paper_cash"])
-        units = spend / (price * (1 + self.fee))
-        self.state["paper_cash"] -= spend
-        self.state["paper_units"] += units
-        return units
+    def buy(self, quantity: int, price: float) -> tuple[int, float]:
+        quantity = min(quantity, int(self.state["paper_cash"] // (price * (1 + self.fee))))
+        self.state["paper_cash"] -= quantity * price * (1 + self.fee)
+        self.state["units"] += quantity
+        return quantity, price
 
-    def sell_all(self, price: float) -> float:
-        units = self.state["paper_units"]
-        self.state["paper_cash"] += units * price * (1 - self.fee)
-        self.state["paper_units"] = 0.0
-        return units
+    def sell_all(self, price: float) -> tuple[int, float]:
+        quantity = self.state["units"]
+        self.state["paper_cash"] += quantity * price * (1 - self.fee)
+        self.state["units"] = 0
+        return quantity, price
+
+    def drop_stale(self, price: float) -> None:
+        self.sell_all(price)
 
     def describe(self, price: float) -> str:
-        cash, units = self.state["paper_cash"], self.state["paper_units"]
-        return f"cash={cash:.2f} units={units:.6f} equity={cash + units * price:.2f}"
+        cash, units = self.state["paper_cash"], self.state["units"]
+        return f"cash=Rs{cash:.2f} shares={units} equity=Rs{cash + units * price:.2f}"
 
 
-class CcxtBroker:
-    """Real market orders on a spot exchange. The position is tracked in the
-    bot's state file so the bot only ever sells what it bought itself."""
+class DhanBroker:
+    """Real market orders through Dhan. ``product`` is 'INTRADAY' or 'CNC' (delivery)."""
 
-    def __init__(self, exchange, symbol: str, state: dict):
-        self.exchange = exchange
-        self.symbol = symbol
+    FINAL_BAD = {"REJECTED", "CANCELLED", "EXPIRED"}
+
+    def __init__(self, dhan, security_id: str, exchange: str, product: str, state: dict,
+                 confirm_seconds: float = 10.0):
+        self.dhan = dhan
+        self.security_id = str(security_id)
+        self.segment = SEGMENTS[exchange.upper()]
+        self.product = product
         self.state = state
-        state.setdefault("live_units", 0.0)
-        exchange.load_markets()
+        self.confirm_seconds = confirm_seconds
+        state.setdefault("units", 0)
 
-    def position(self) -> float:
-        return self.state["live_units"]
+    def position(self) -> int:
+        return self.state["units"]
 
-    def buy(self, quote_amount: float, price: float) -> float:
-        amount = float(self.exchange.amount_to_precision(self.symbol, quote_amount / price))
-        order = self.exchange.create_market_buy_order(self.symbol, amount)
-        filled = float(order.get("filled") or amount)
-        self.state["live_units"] += filled
-        return filled
+    def _order(self, side: str, quantity: int, price: float) -> tuple[int, float]:
+        placed = check(self.dhan.place_order(
+            security_id=self.security_id, exchange_segment=self.segment, transaction_type=side,
+            quantity=quantity, order_type="MARKET", product_type=self.product, price=0), f"{side} order")
+        order_id = placed.get("orderId")
+        status, detail = placed.get("orderStatus", ""), {}
+        deadline = time.time() + self.confirm_seconds
+        while status != "TRADED" and status not in self.FINAL_BAD and time.time() < deadline:
+            time.sleep(1)
+            try:
+                detail = check(self.dhan.get_order_by_id(order_id), "order status")
+            except RuntimeError as err:
+                log.warning("%s", err)
+                continue
+            if isinstance(detail, list):
+                detail = detail[0] if detail else {}
+            status = detail.get("orderStatus", status)
+        if status in self.FINAL_BAD:
+            reason = detail.get("omsErrorDescription") or detail.get("remarks") or ""
+            raise RuntimeError(f"{side} order {order_id} was {status}: {reason}")
+        if status != "TRADED":
+            log.warning("%s order %s not confirmed yet (status %s); assuming it fills - CHECK YOUR DHAN APP",
+                        side, order_id, status or "unknown")
+            return quantity, price
+        filled = int(detail.get("filledQty") or quantity)
+        return filled, float(detail.get("averageTradedPrice") or price)
 
-    def sell_all(self, price: float) -> float:
-        base = self.symbol.split("/")[0]
-        free = float(self.exchange.fetch_balance().get(base, {}).get("free") or 0)
-        # Fees may have been taken in the base asset, so never sell more than is free.
-        amount = float(self.exchange.amount_to_precision(self.symbol, min(self.state["live_units"], free)))
-        if amount > 0:
-            self.exchange.create_market_sell_order(self.symbol, amount)
-        self.state["live_units"] = 0.0
-        return amount
+    def buy(self, quantity: int, price: float) -> tuple[int, float]:
+        filled, avg = self._order("BUY", quantity, price)
+        self.state["units"] += filled
+        return filled, avg
+
+    def sell_all(self, price: float) -> tuple[int, float]:
+        filled, avg = self._order("SELL", self.state["units"], price)
+        self.state["units"] = 0
+        return filled, avg
+
+    def drop_stale(self, price: float) -> None:
+        self.state["units"] = 0  # Dhan already squared the intraday position off
 
     def describe(self, price: float) -> str:
-        return f"units={self.state['live_units']:.6f} (~{self.state['live_units'] * price:.2f} quote)"
+        return f"shares={self.state['units']} (~Rs{self.state['units'] * price:.2f})"

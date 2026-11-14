@@ -1,5 +1,6 @@
 __pycache__/
 .pytest_cache/
-bot_state.json
+*_state.json
+dhan_scrip_master.csv
 .env
 *.log

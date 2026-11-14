@@ -1,10 +1,13 @@
 """Bar-by-bar backtester for the EMA crossover strategy.
 
 Signals are computed on a bar's close and filled at the NEXT bar's open, so
-there is no look-ahead. Each entry uses the full account equity.
+there is no look-ahead. Each entry uses the full account equity, rounded down
+to whole shares. With ``exit_time`` set (intraday/MIS style) no trade is opened
+at or after that time of day and any open position is squared off.
 """
 from __future__ import annotations
 
+import datetime as dt
 from dataclasses import dataclass, field
 
 import pandas as pd
@@ -59,6 +62,8 @@ def run_backtest(
     fee_pct: float = 0.1,
     allow_short: bool = False,
     stop_loss_pct: float | None = None,
+    whole_shares: bool = True,
+    exit_time: dt.time | None = None,
 ) -> Result:
     """Backtest on OHLCV candles. ``fee_pct`` is charged per side on notional."""
     data = add_signals(df, fast, slow)
@@ -72,8 +77,12 @@ def run_backtest(
 
     def open_position(direction: int, price: float, time) -> None:
         nonlocal cash, units, entry_price, entry_time, entry_equity
-        entry_equity = cash
         size = cash / (price * (1 + fee))
+        if whole_shares:
+            size = float(int(size))
+        if size <= 0:
+            return  # cannot afford a single share
+        entry_equity = cash
         cash -= direction * size * price + size * price * fee
         units = direction * size
         entry_price, entry_time = price, time
@@ -91,7 +100,10 @@ def run_backtest(
         time = data.index[i]
         sig = signals[i - 1]  # decided on the previous close, filled at this open
 
-        if sig == BUY:
+        if exit_time is not None and time.time() >= exit_time:
+            if units != 0:
+                close_position(bar.open, time, "square-off")
+        elif sig == BUY:
             if units < 0:
                 close_position(bar.open, time, "signal")
             if units == 0:
